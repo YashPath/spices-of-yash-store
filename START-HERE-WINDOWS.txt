@@ -1,0 +1,19 @@
+SPICES OF YASH — START HERE (WINDOWS)
+
+1. Extract this ZIP.
+2. Open the extracted spices-of-yash-store folder.
+3. Double-click START-LOCAL.bat.
+4. Wait for npm install to finish (first run only).
+5. Open http://localhost:3000 in your browser.
+6. Admin: http://localhost:3000/admin
+
+Before admin login, open a separate terminal in this folder and run:
+  npm run admin:create
+Choose a new username and a strong password (12+ characters).
+
+If the site says a package/native module failed to install, take a screenshot
+of the terminal and send it in ChatGPT. Do not delete this project folder.
+
+IMPORTANT: This is a local starter. Online payment gateway is not integrated.
+Do not expose it publicly until production security, privacy, shipping, tax,
+food-labeling and applicable FSSAI requirements have been reviewed.

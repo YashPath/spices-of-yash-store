@@ -1,0 +1,18 @@
+node_modules/
+.env
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+.DS_Store
+# Local backups and reports
+backups/
+backup*/
+.backup*/
+.one-run-*/
+.security-loop-backup*/
+audit-backup/
+one-run-report-*/
+
+# Keep environment secrets private
+.env.*
+!.env.example
