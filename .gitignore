@@ -16,3 +16,17 @@ one-run-report-*/
 # Keep environment secrets private
 .env.*
 !.env.example
+
+# Security audit reports - keep local
+audit-*.json
+audit-*.txt
+production-audit.*
+production-audit-*.*
+one-run-v2-report-*/
+*-before-tar-fix.bak
+*-pre-audit.bak
+*.bak
+npm-debug.log*
+
+# Local security reports and backups
+security-report*/
