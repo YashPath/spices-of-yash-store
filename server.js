@@ -223,6 +223,21 @@ app.patch("/api/admin/orders/:id", requireAdmin, requireCsrf, (req, res) => {
   if (!result.changes) return res.status(404).json({ error: "Order not found." });
   res.json({ message: "Order updated." });
 });
+
+app.get("/api/admin/products", requireAdmin, (req, res) => {
+  try {
+    const products = db.prepare(
+      "SELECT id, name, slug, category, description, price, weight, image, stock, featured, active, wholesale_price, wholesale_min_qty FROM products ORDER BY id DESC"
+    ).all();
+
+    res.json(products);
+  } catch (err) {
+    console.error("Admin products error:", err);
+    res.status(500).json({ error: "Unable to load products." });
+  }
+});
+
+
 app.post("/api/admin/products", requireAdmin, requireCsrf, (req, res) => {
   const schema = z.object({
     name: z.string().trim().min(2).max(120),
@@ -292,13 +307,76 @@ app.patch("/api/admin/coupons/:id", requireAdmin, requireCsrf, (req,res) => {
   if (!result.changes) return res.status(404).json({error:'Coupon not found.'});
   res.json({message:'Coupon updated.'});
 });
-app.get("/api/admin/reports", requireAdmin, (req,res) => {
-  const monthly = db.prepare("SELECT strftime('%Y-%m',created_at) month, COUNT(*) orders, ROUND(SUM(CASE WHEN status != 'Cancelled' THEN total ELSE 0 END),2) revenue FROM orders GROUP BY month ORDER BY month DESC LIMIT 12").all();
-  const bestSellers = db.prepare("SELECT oi.product_name name, SUM(oi.quantity) units, ROUND(SUM(oi.unit_price*oi.quantity),2) gross FROM order_items oi JOIN orders o ON o.id=oi.order_id WHERE o.status != 'Cancelled' GROUP BY oi.product_name ORDER BY units DESC LIMIT 10").all();
-  const lowStock = db.prepare("SELECT id,name,stock FROM products WHERE active=1 AND stock<=10 ORDER BY stock ASC,name ASC").all();
-  const payments = db.prepare("SELECT payment_status status,COUNT(*) count FROM orders GROUP BY payment_status").all();
-  res.json({monthly,bestSellers,lowStock,payments});
+
+
+app.get("/api/admin/reports", requireAdmin, (req, res) => {
+  try {
+    const monthly = db.prepare(`
+      SELECT
+        strftime('%Y-%m', created_at) AS month,
+        COUNT(*) AS orders,
+        SUM(CASE
+          WHEN payment_status = 'Paid' AND status != 'Cancelled'
+          THEN 1 ELSE 0
+        END) AS paidOrders,
+        ROUND(SUM(CASE
+          WHEN payment_status = 'Paid' AND status != 'Cancelled'
+          THEN total ELSE 0
+        END), 2) AS revenue
+      FROM orders
+      GROUP BY month
+      ORDER BY month DESC
+      LIMIT 12
+    `).all();
+
+    const bestSellers = db.prepare(`
+      SELECT
+        oi.product_name AS name,
+        SUM(oi.quantity) AS units,
+        ROUND(SUM(oi.unit_price * oi.quantity), 2) AS gross
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+      WHERE o.status != 'Cancelled'
+      GROUP BY oi.product_name
+      ORDER BY units DESC
+      LIMIT 10
+    `).all();
+
+    const lowStock = db.prepare(`
+      SELECT
+        id,
+        name,
+        stock
+      FROM products
+      WHERE active = 1
+        AND stock <= 10
+      ORDER BY stock ASC, name ASC
+    `).all();
+
+    const payments = db.prepare(`
+      SELECT
+        payment_status AS status,
+        COUNT(*) AS count
+      FROM orders
+      WHERE status != 'Cancelled'
+      GROUP BY payment_status
+    `).all();
+
+    res.json({
+      monthly,
+      bestSellers,
+      lowStock,
+      payments
+    });
+
+  } catch (err) {
+    console.error("Admin reports error:", err);
+    res.status(500).json({
+      error: "Unable to load reports."
+    });
+  }
 });
+
 app.get("/api/admin/reports.csv", requireAdmin, (req,res) => {
   const rows = db.prepare("SELECT id,created_at,customer_name,phone,city,pincode,order_type,business_name,total,discount,coupon_code,payment_method,payment_status,status FROM orders ORDER BY created_at DESC").all();
   const cols = ['id','created_at','customer_name','phone','city','pincode','order_type','business_name','total','discount','coupon_code','payment_method','payment_status','status'];
@@ -309,7 +387,7 @@ app.get("/api/admin/reports.csv", requireAdmin, (req,res) => {
 app.get("/api/admin/summary", requireAdmin, (req, res) => {
   const products = db.prepare("SELECT COUNT(*) AS count FROM products WHERE active = 1").get().count;
   const orders = db.prepare("SELECT COUNT(*) AS count FROM orders").get().count;
-  const revenue = db.prepare("SELECT COALESCE(SUM(total),0) AS total FROM orders WHERE status != 'Cancelled'").get().total;
+ const revenue = db.prepare("SELECT COALESCE(SUM(total),0) AS total FROM orders WHERE payment_status = 'Paid' AND status != 'Cancelled'").get().total;
   const pending = db.prepare("SELECT COUNT(*) AS count FROM orders WHERE status IN ('New','Confirmed')").get().count;
   res.json({ products, orders, revenue, pending });
 });

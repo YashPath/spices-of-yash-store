@@ -1,0 +1,119 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261009095343
+Username: DESKTOP-EQ8NOQU\Hp
+RunAs User: DESKTOP-EQ8NOQU\Hp
+Configuration Name: 
+Machine: DESKTOP-EQ8NOQU (Microsoft Windows NT 10.0.22631.0)
+Host Application: powershell -NoProfile -ExecutionPolicy Bypass -File .\Spices-of-Yash-Health-Report-FIXED.ps1
+Process ID: 11228
+PSVersion: 5.1.22621.6133
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.22621.6133
+BuildVersion: 10.0.22621.6133
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+SPICES OF YASH - READ-ONLY HEALTH REPORT
+Date: 2026-10-09 09:53:43
+Project: D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store
+Note: This report does not modify project files or fix vulnerabilities.
+
+========== 1. RUNTIME ==========
+
+
+
+========== 2. IMPORTANT FILES ==========
+PASS  Found: package.json
+PASS  Found: server.js
+PASS  Found: public\index.html
+PASS  Found: public\styles.css
+PASS  Found: public\app.js
+PASS  Found: .env
+Package: spices-of-yash-store 2.2.1
+Start script: node server.js
+Test script: node scripts/smoke-static.js
+
+========== 3. BACKEND SYNTAX ==========
+
+PASS  server.js syntax check
+
+PASS  public/app.js syntax check
+
+========== 4. DEPENDENCIES / SECURITY ADVISORY ==========
+PASS  node_modules exists
+PASS  package-lock.json exists
+npm audit counts: critical=1, high=4, moderate=0, low=2, info=0
+WARN  High/critical dependency advisories exist; review before production.
+
+========== 5. DATABASE FILE DISCOVERY (names and sizes only) ==========
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\.one-run-backup-20261004-132726\store.sqlite | 49,152 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\audit-backup\store.sqlite | 49,152 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\backup-before-audit-2026-10-03\data\sessions.sqlite | 12,288 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\backup-before-audit-2026-10-03\data\store.sqlite | 49,152 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\backups\store-backup.sqlite | 49,152 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\backups\store-safe-backup-20261003.sqlite | 49,152 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\data\prelaunch-backup-2026-10-04T03-21-16-381Z.sqlite | 49,152 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\data\sessions.sqlite | 12,288 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\data\store-backup-before-audit.sqlite | 49,152 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\data\store.audit-backup.sqlite | 49,152 bytes
+D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\data\store.sqlite | 49,152 bytes
+NOTE  Finding a DB file does not prove integrity, schema correctness, or backup restorability.
+
+========== 6. CONFIGURATION SAFETY (never print secret values) ==========
+CHECK SESSION_SECRET is set (value hidden; strength not cryptographically verified).
+CHECK JWT_SECRET not found in .env; app may use another auth mechanism or config name.
+CHECK COOKIE_SECRET not found in .env; app may use another auth mechanism or config name.
+CHECK NODE_ENV is 'development' (production deployment normally expects production).
+PASS  .env.example exists
+PASS  .gitignore appears to ignore .env
+
+========== 7. STOREFRONT HOOKS / ROUTES (basic text checks only) ==========
+PASS  index.html contains id=home
+PASS  index.html contains id=shop
+PASS  index.html contains id=product-grid
+PASS  index.html contains id=cart-open
+PASS  index.html contains id=checkout-form
+CHECK server.js contains pattern: helmet (presence only, not proof of correct security)
+CHECK server.js contains pattern: express\.json (presence only, not proof of correct security)
+CHECK server.js contains pattern: express\.urlencoded (presence only, not proof of correct security)
+CHECK server.js contains pattern: rate.?limit (presence only, not proof of correct security)
+CHECK server.js contains pattern: session|cookie (presence only, not proof of correct security)
+CHECK server.js contains pattern: better-sqlite3|sqlite3 (presence only, not proof of correct security)
+CHECK server.js contains pattern: csrf (presence only, not proof of correct security)
+
+========== 8. BACKUP FOLDERS ==========
+Found 44 backup-named folders (does not verify DB backup/restore).
+.backup-backend-safety-20261003-210051
+.backup-spices-yash-18026
+.one-run-backup-20261004-132726
+.one-run-v2-backup-20261004-134031
+.security-loop-backup-20261004-120544
+animated-video-v2-backup-20261005-140152
+animated-video-v3-backup-20261005-140600
+audit-backup
+backup-before-audit-2026-10-03
+backup-client-routing-fix
+backups
+cinematic-spice-backup-20261005-154323
+cinematic-spice-v12-backup-20261008-145822
+encoding-cleanup-v2-backup-20261008-103924
+frontend-animation-backup-20261005-180357
+
+========== 9. MANUAL TESTS STILL REQUIRED ==========
+MANUAL  Place a test order and confirm it appears in admin and persists after server restart.
+MANUAL  Test invalid login, repeated login attempts, and admin routes while logged out.
+MANUAL  Confirm payment provider is real/test-mode as intended; do not store raw card data.
+MANUAL  Verify HTTPS, secure cookies, CSRF protection where applicable, and rate limiting before public launch.
+MANUAL  Back up the actual DB file, then test restoring a copy—not the live DB.
+MANUAL  Inspect SQL queries for parameterization and all user inputs for validation.
+
+========== END ==========
+Report saved to: D:\Project\Spices-of-Yash-Complete-Local-Project (1)\spices-of-yash-store\health-report-20261009-095342.txt
+This is a preliminary static health report, not a penetration test or security certification.
+**********************
+Windows PowerShell transcript end
+End time: 20261009095355
+**********************
