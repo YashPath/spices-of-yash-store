@@ -96,4 +96,25 @@ if (count === 0) {
   const tx = db.transaction(items => items.forEach(p => insert.run(...p, Math.round(p[4] * 0.8), 10)));
   tx(seed);
 }
+
+// Create initial admin if the database has no admin.
+const bootstrapUsername = process.env.ADMIN_BOOTSTRAP_USERNAME;
+const bootstrapPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+
+if (bootstrapUsername && bootstrapPassword) {
+  const adminCount = db
+    .prepare("SELECT COUNT(*) AS count FROM admins")
+    .get().count;
+
+  if (adminCount === 0) {
+    const bcrypt = require("bcryptjs");
+    const passwordHash = bcrypt.hashSync(bootstrapPassword, 12);
+
+    db.prepare(
+      "INSERT INTO admins (username, password_hash) VALUES (?, ?)"
+    ).run(bootstrapUsername, passwordHash);
+
+    console.log("Initial admin account created.");
+  }
+}
 module.exports = db;
