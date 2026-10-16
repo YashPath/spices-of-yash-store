@@ -1,0 +1,45 @@
+{
+  "name": "spices-of-yash-store",
+  "version": "3.1.0",
+  "private": true,
+  "description": "Retail and wholesale spices storefront with coupons, reports and secure admin",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node scripts/smoke-static.js && node --test tests/api.test.js",
+    "test:api": "node --test tests/api.test.js",
+    "test:e2e": "playwright test",
+    "admin:create": "node scripts/create-admin.js",
+    "db:audit": "node scripts/db-audit.js",
+    "db:copy-to-postgres": "node scripts/sqlite-to-postgres.js"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^13.0.3",
+    "connect-pg-simple": "^10.0.0",
+    "connect-sqlite3": "^0.9.16",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "pg": "^8.13.1",
+    "qrcode": "^1.5.4",
+    "zod": "^3.24.2"
+  },
+  "optionalDependencies": {
+    "sharp": "^0.33.5"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.3": true,
+    "sqlite3@5.1.7": true
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "supertest": "^7.0.0"
+  }
+}
