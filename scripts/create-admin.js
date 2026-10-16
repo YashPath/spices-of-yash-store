@@ -57,10 +57,11 @@ function askHidden(question) {
   }
   const hash = await bcrypt.hash(password, 12);
   try {
-    db.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").run(username, hash);
-    console.log("Admin created. Keep your password private.");
+    await db.init();
+    await db.run("INSERT INTO admins (username, password_hash) VALUES (?, ?)", [username, hash]);
+    console.log(`Admin created in the ${db.kind} database. Keep your password private.`);
   } catch (e) {
-    console.error(e.message.includes("UNIQUE") ? "That username already exists." : "Could not create admin.");
+    console.error(/UNIQUE|duplicate key/i.test(e.message) ? "That username already exists." : `Could not create admin: ${e.message}`);
     process.exitCode = 1;
-  } finally { rl.close(); db.close(); }
+  } finally { rl.close(); await db.close(); }
 })();

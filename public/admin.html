@@ -1,11 +1,151 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Spices of Yash Admin</title><link rel="stylesheet" href="/admin.css"><script src="/admin.js" defer></script></head>
-<body><header class="admin-header"><a href="/" class="admin-brand">✳ Spices of Yash <span>ADMIN</span></a><div id="admin-user"></div></header><main class="admin-main">
-<section id="login-panel" class="login-card"><p class="eyebrow">STORE MANAGEMENT</p><h1>Welcome back.</h1><p>Sign in to manage retail, wholesale orders, inventory, coupons and reports.</p><form id="login-form"><label>Username<input name="username" required autocomplete="username" maxlength="40"></label><label>Password<input name="password" type="password" required autocomplete="current-password" maxlength="200"></label><div id="login-error" class="error" role="alert"></div><button class="primary-btn" type="submit">Sign in →</button></form><a href="/" class="back-link">← Back to storefront</a></section>
-<section id="dashboard" hidden><div class="dash-title"><div><p class="eyebrow">YOUR BUSINESS AT A GLANCE</p><h1>Store dashboard</h1></div><button id="logout" class="secondary-btn">Log out</button></div><div class="stats-grid"><article><small>Active products</small><strong id="stat-products">—</strong></article><article><small>Total orders</small><strong id="stat-orders">—</strong></article><article><small>Paid revenue*</small><strong id="stat-revenue">—</strong></article><article><small>Awaiting action</small><strong id="stat-pending">—</strong></article></div><p class="footnote">*Only verified paid orders; excludes cancelled orders and is not accounting profit.</p>
-<div class="admin-columns"><section class="panel"><div class="panel-title"><h2>Add a product</h2></div><form id="product-form" class="product-form"><label>Product name<input name="name" required minlength="2" maxlength="120"></label><label>Category<select name="category"><option>Whole Spices</option><option>Ground Spices</option><option>Blended Spices</option></select></label><label>Description<textarea name="description" required minlength="5" maxlength="1000" rows="3"></textarea></label><div class="two-fields"><label>Price (₹)<input name="price" type="number" min="1" step="1" required></label><label>Pack size<input name="weight" required maxlength="40" placeholder="100 g"></label></div><div class="two-fields"><label>Wholesale price (₹)<input name="wholesale_price" type="number" min="0" step="0.01" value="0"></label><label>Wholesale minimum units<input name="wholesale_min_qty" type="number" min="2" step="1" value="10"></label></div><label>Image URL (optional)<input name="image" type="url" maxlength="500" placeholder="https://…"></label><div class="two-fields"><label>Stock<input name="stock" type="number" min="0" step="1" required value="25"></label><label class="check-label"><input name="featured" type="checkbox"> Pantry favourite</label></div><div id="product-message" class="message" role="status"></div><button class="primary-btn" type="submit">Add product +</button></form></section>
-<section class="panel orders-panel"><div class="panel-title"><h2>Recent orders</h2><button id="refresh-orders" class="secondary-btn">Refresh ↻</button></div><div id="orders-list"><p class="muted">Loading orders…</p></div></section></div>
-<section class="panel product-management"><div class="panel-title"><h2>Product inventory & pricing</h2><button id="refresh-products" class="secondary-btn">Refresh ↻</button></div><div id="inventory-list"><p class="muted">Loading inventory…</p></div></section>
-<section class="panel"><div class="panel-title"><h2>Coupons & offers</h2><button id="refresh-coupons" class="secondary-btn">Refresh ↻</button></div><form id="coupon-form" class="product-form"><div class="two-fields"><label>Coupon code<input name="code" required minlength="3" maxlength="40" pattern="[A-Za-z0-9_-]+" placeholder="YASH10"></label><label>Discount type<select name="discountType"><option value="percent">Percentage (%)</option><option value="fixed">Fixed amount (₹)</option></select></label></div><div class="two-fields"><label>Discount value<input name="discountValue" type="number" min="1" step="0.01" required></label><label>Minimum order (₹)<input name="minOrder" type="number" min="0" step="1" value="0" required></label></div><label>Expiry date (optional)<input name="expiresAt" type="date"></label><div id="coupon-message" class="message" role="status"></div><button class="primary-btn" type="submit">Create coupon +</button></form><div id="coupons-list"></div></section>
-<section class="panel"><div class="panel-title"><h2>Business reports</h2><button id="download-report" class="secondary-btn">Export orders CSV ↓</button></div><div id="reports-content"><p class="muted">Reports load after admin sign-in.</p></div></section>
-</section>
-</main><footer>Spices of Yash internal tools · Keep this account private.</footer></body></html>
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#141b13">
+<title>Spices of Yash Admin</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/admin.css">
+<script src="/admin.js" defer></script>
+</head>
+<body class="admin-body">
+<header class="admin-header">
+  <div class="admin-header__inner">
+    <a class="brand" href="/" title="View store"><span class="brand__mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M20 8c4 5 6 9 6 13a6 6 0 0 1-12 0c0-4 2-8 6-13Z" fill="currentColor"/></svg></span><span class="brand__text"><span class="brand__name">Spices of Yash</span><span class="brand__tag">Store admin</span></span></a>
+    <div class="admin-header__actions" id="admin-actions" hidden>
+      <span class="admin-user" id="admin-user"></span>
+      <a class="btn btn--ghost-light btn--sm" href="/" target="_blank" rel="noopener">View store</a>
+      <button class="btn btn--ghost-light btn--sm" id="logout" type="button">Log out</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <!-- Login -->
+  <section id="login-panel" class="login-card" aria-labelledby="login-title">
+    <p class="eyebrow">Store management</p>
+    <h1 id="login-title">Welcome back.</h1>
+    <p class="muted">Sign in to manage orders, products, coupons and reports.</p>
+    <form id="login-form">
+      <label>Username<input id="login-username" name="username" required autocomplete="username" maxlength="40"></label>
+      <label>Password<input id="login-password" name="password" type="password" required autocomplete="current-password" maxlength="200"></label>
+      <div id="login-error" class="form-error" role="alert"></div>
+      <button class="btn btn--dark btn--block" type="submit">Sign in</button>
+    </form>
+    <a href="/" class="back-link">← Back to the store</a>
+  </section>
+
+  <!-- Dashboard -->
+  <section id="dashboard" hidden>
+    <nav class="tabs" role="tablist" aria-label="Admin sections">
+      <button role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true" data-tab="overview">Overview</button>
+      <button role="tab" id="tab-orders" aria-controls="panel-orders" aria-selected="false" data-tab="orders">Orders <span class="tab-count" id="tab-orders-count"></span></button>
+      <button role="tab" id="tab-products" aria-controls="panel-products" aria-selected="false" data-tab="products">Products <span class="tab-count tab-count--warn" id="tab-products-count"></span></button>
+      <button role="tab" id="tab-coupons" aria-controls="panel-coupons" aria-selected="false" data-tab="coupons">Coupons</button>
+      <button role="tab" id="tab-reports" aria-controls="panel-reports" aria-selected="false" data-tab="reports">Reports</button>
+    </nav>
+
+    <!-- Overview -->
+    <section class="tab-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
+      <div class="stats">
+        <article class="stat"><small>Awaiting action</small><strong id="stat-pending">—</strong><span>New + confirmed orders</span></article>
+        <article class="stat"><small>Total orders</small><strong id="stat-orders">—</strong><span>All time</span></article>
+        <article class="stat"><small>Paid revenue</small><strong id="stat-revenue">—</strong><span>Verified UPI, excl. cancelled</span></article>
+        <article class="stat"><small>Active products</small><strong id="stat-products">—</strong><span id="stat-lowstock">—</span></article>
+      </div>
+      <div class="overview-grid">
+        <section class="panel">
+          <div class="panel__head"><h2>Latest orders</h2><button class="btn btn--outline btn--sm" type="button" data-goto="orders">All orders</button></div>
+          <div id="recent-orders"><p class="muted">Loading…</p></div>
+        </section>
+        <div class="overview-side">
+          <section class="panel">
+            <div class="panel__head"><h2>Store health</h2></div>
+            <ul class="health" id="health-list"></ul>
+          </section>
+          <section class="panel">
+            <div class="panel__head"><h2>Low stock</h2><button class="btn btn--outline btn--sm" type="button" data-goto="products">Manage</button></div>
+            <ul class="mini-list" id="low-stock-list"><li class="muted">Loading…</li></ul>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- Orders -->
+    <section class="tab-panel" id="panel-orders" role="tabpanel" aria-labelledby="tab-orders" hidden>
+      <div class="toolbar">
+        <label class="search-field"><span class="sr-only">Search orders</span><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="order-search" type="search" placeholder="Search name, phone, city or #order"></label>
+        <label class="select-field">Status<select id="order-status-filter"><option value="">All</option><option>New</option><option>Confirmed</option><option>Packed</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></label>
+        <label class="select-field">Payment<select id="order-pay-filter"><option value="">All</option><option>Pending verification</option><option>Paid</option><option>Failed</option><option>Refunded</option></select></label>
+        <button class="btn btn--outline btn--sm" id="refresh-orders" type="button">Refresh</button>
+      </div>
+      <p class="muted toolbar-count" id="orders-count" aria-live="polite"></p>
+      <div id="orders-list" class="orders"><p class="muted">Loading orders…</p></div>
+    </section>
+
+    <!-- Products -->
+    <section class="tab-panel" id="panel-products" role="tabpanel" aria-labelledby="tab-products" hidden>
+      <details class="panel add-product" id="add-product">
+        <summary><h2>Add a product</h2><span class="btn btn--dark btn--sm">New product</span></summary>
+        <form id="product-form" class="form-grid">
+          <label class="span-2">Product name<input id="np-name" name="name" required minlength="2" maxlength="120"></label>
+          <label>Category<select id="np-category" name="category"><option>Whole Spices</option><option>Ground Spices</option><option>Blended Spices</option></select></label>
+          <label>Pack size<input id="np-weight" name="weight" required maxlength="40" placeholder="100 g"></label>
+          <label class="span-2">Description<textarea id="np-description" name="description" required minlength="5" maxlength="1000" rows="3"></textarea></label>
+          <label>Price (₹)<input id="np-price" name="price" type="number" min="1" step="1" required></label>
+          <label>Stock<input id="np-stock" name="stock" type="number" min="0" step="1" required value="25"></label>
+          <label>Wholesale price (₹)<input id="np-wprice" name="wholesale_price" type="number" min="0" step="0.01" value="0"></label>
+          <label>Wholesale minimum units<input id="np-wmin" name="wholesale_min_qty" type="number" min="2" step="1" value="10"></label>
+          <div class="span-2 upload-field">
+            <img id="np-preview" src="/images/spice-placeholder.svg" alt="" width="96" height="120">
+            <div>
+              <label class="btn btn--outline btn--sm file-btn">Upload photo<input id="np-file" type="file" accept="image/jpeg,image/png,image/webp"></label>
+              <p class="muted">JPG, PNG or WebP up to 8 MB. It’s resized and saved with your store data.</p>
+              <input id="np-image" name="image" type="hidden">
+            </div>
+          </div>
+          <label class="check span-2"><input id="np-featured" name="featured" type="checkbox"> Show as “Pantry favourite”</label>
+          <div class="span-2 form-actions"><span id="product-message" class="form-note" role="status"></span><button class="btn btn--dark" type="submit">Add product</button></div>
+        </form>
+      </details>
+
+      <section class="panel">
+        <div class="panel__head"><h2>Inventory &amp; pricing</h2><button class="btn btn--outline btn--sm" id="refresh-products" type="button">Refresh</button></div>
+        <div id="inventory-list" class="inventory"><p class="muted">Loading inventory…</p></div>
+      </section>
+    </section>
+
+    <!-- Coupons -->
+    <section class="tab-panel" id="panel-coupons" role="tabpanel" aria-labelledby="tab-coupons" hidden>
+      <div class="two-col">
+        <section class="panel">
+          <div class="panel__head"><h2>Create a coupon</h2></div>
+          <form id="coupon-form" class="form-grid">
+            <label>Coupon code<input id="cp-code" name="code" required minlength="3" maxlength="40" pattern="[A-Za-z0-9_\-]+" placeholder="YASH10"></label>
+            <label>Discount type<select id="cp-type" name="discountType"><option value="percent">Percentage (%)</option><option value="fixed">Fixed amount (₹)</option></select></label>
+            <label>Discount value<input id="cp-value" name="discountValue" type="number" min="1" step="0.01" required></label>
+            <label>Minimum order (₹)<input id="cp-min" name="minOrder" type="number" min="0" step="1" value="0" required></label>
+            <label class="span-2">Expiry date (optional)<input id="cp-expiry" name="expiresAt" type="date"></label>
+            <div class="span-2 form-actions"><span id="coupon-message" class="form-note" role="status"></span><button class="btn btn--dark" type="submit">Create coupon</button></div>
+          </form>
+        </section>
+        <section class="panel">
+          <div class="panel__head"><h2>Your coupons</h2><button class="btn btn--outline btn--sm" id="refresh-coupons" type="button">Refresh</button></div>
+          <div id="coupons-list"><p class="muted">Loading…</p></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Reports -->
+    <section class="tab-panel" id="panel-reports" role="tabpanel" aria-labelledby="tab-reports" hidden>
+      <div class="panel__head panel__head--page"><h2>Business reports</h2><a class="btn btn--dark btn--sm" href="/api/admin/reports.csv" id="download-report">Export orders (CSV)</a></div>
+      <div id="reports-content" class="reports"><p class="muted">Loading reports…</p></div>
+    </section>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

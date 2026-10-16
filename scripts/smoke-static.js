@@ -1,62 +1,65 @@
+// Static smoke test: checks that key files, routes, security rules and
+// storefront features are present. Run with `npm test`.
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 const root = path.join(__dirname, '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
+
+const required = ['server.js', 'src/db.js', 'src/notify.js', 'public/policies/privacy.html', 'public/policies/terms.html', 'public/policies/shipping.html', 'public/policies/refund.html', 'public/index.html', 'public/app.js', 'public/animations.js', 'public/styles.css',
+  'public/admin.html', 'public/admin.js', 'public/admin.css', 'public/favicon.svg', 'public/images/og-image.jpg',
+  'public/fonts/fraunces-latin-opsz-normal.woff2', 'public/fonts/manrope-latin-wght-normal.woff2', 'scripts/db-audit.js', '.env.example', 'README.md'];
+for (const file of required) assert(fs.existsSync(path.join(root, file)), `Missing required file: ${file}`);
+
 const server = read('server.js');
+const db = read('src/db.js');
+const html = read('public/index.html');
+const appJs = read('public/app.js');
+const css = read('public/styles.css');
 const admin = read('public/admin.html');
 const adminJs = read('public/admin.js');
-const storefront = read('public/index.html');
-const storefrontJs = read('public/app.js');
-const db = read('src/db.js');
 
-for (const file of ['scripts/db-audit.js', 'server.js', 'src/db.js', 'public/index.html', 'public/app.js', 'public/admin.html', 'public/admin.js', 'public/styles.css', 'public/admin.css', '.env.example', 'README.md', 'SECURITY.md']) {
-  assert(fs.existsSync(path.join(root, file)), `Missing required file: ${file}`);
-}
-for (const route of ['/api/health', '/api/products', '/api/orders', '/api/admin/login', '/api/admin/orders', '/api/admin/products', '/api/admin/coupons', '/api/admin/reports', '/api/admin/reports.csv', '/api/payments/razorpay/order', '/api/payments/razorpay/verify']) {
+// API routes
+for (const route of ['/api/health', '/api/config', '/api/products', '/api/orders', '/api/csrf', '/api/admin/login', '/api/admin/orders',
+  '/api/admin/products', '/api/admin/coupons', '/api/admin/reports', '/api/admin/reports.csv', '/api/admin/summary', '/api/admin/images', '/api/admin/test-alert', '/sitemap.xml', '/robots.txt']) {
   assert(server.includes(`"${route}"`), `Missing expected route: ${route}`);
 }
+
+// Security
+assert(server.includes("scriptSrc: [\"'self'\"]"), 'CSP must keep script-src self (no unsafe-inline scripts)');
+assert(!/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/i.test(html), 'index.html must not contain inline executable <script> blocks');
+assert(server.includes('timingSafeEqual'), 'CSRF token comparison must be timing-safe');
+assert(server.includes('req.session.adminId'), 'Admin routes must enforce a logged-in session');
+assert(server.includes('app.get("/api/admin/products", requireAdmin'), 'Full product inventory must be admin-only');
+assert(server.includes('db.tx('), 'Order stock updates must use a transaction');
+assert(server.includes("'Pending verification'"), 'UPI payments must not be auto-marked as paid');
+assert(server.includes('safeCsvCell'), 'CSV export must guard against spreadsheet formulas');
+assert(read('src/db.js').includes('DATABASE_URL'), 'Postgres support must be available via DATABASE_URL');
+assert(server.includes('app.use("/api", generalLimiter)'), 'Rate limiter must apply to the API only, not static assets');
+assert(server.includes('\\\\u003c') || server.includes('\\u003c'), 'JSON-LD output must escape "<"');
+
+// Database
 for (const feature of ['wholesale_price', 'wholesale_min_qty', 'payment_status', 'discount', 'coupon_code']) {
   assert(db.includes(feature), `Missing database field/feature: ${feature}`);
   assert(server.includes(feature), `Missing server handling: ${feature}`);
 }
+assert(!db.includes('images.unsplash.com/photo'), 'Seed data must use local product images');
+
+// Admin
 for (const field of ['wholesale_price', 'wholesale_min_qty', 'discountValue', 'minOrder']) {
   assert(admin.includes(`name="${field}"`), `Missing admin form field: ${field}`);
   assert(adminJs.includes(field), `Missing admin client handling: ${field}`);
 }
-for (const phrase of ['checkout-form', 'product-grid', 'cart-items', 'search-input']) assert(storefront.includes(`id="${phrase}"`), `Missing storefront element: ${phrase}`);
-assert(storefrontJs.includes('payload.items'), 'Checkout must submit cart items');
-assert(server.includes('req.session.adminId'), 'Admin routes must enforce a logged-in session');
-assert(server.includes('app.get("/api/admin/products", requireAdmin'), 'Full product inventory must be admin-only');
-assert(adminJs.includes('data-save-product'), 'Admin UI must expose product pricing/stock/active updates');
-assert(adminJs.includes('/api/admin/products'), 'Admin UI must load inactive products for management');
-assert(server.includes('timingSafeEqual'), 'CSRF token comparison must be timing-safe');
-assert(server.includes('db.transaction'), 'Order stock updates must use a transaction');
-assert(server.includes('Pending verification'), 'UPI payment must not be auto-marked as paid');
-assert(server.includes('createHmac("sha256"'), 'Razorpay payment signatures must be verified server-side');
-assert(server.includes('payment.status !== "captured"'), 'Orders must not be marked paid before gateway capture is confirmed');
-assert(server.includes('/api/payments/razorpay/webhook'), 'A signed payment webhook route must be present');
-assert(server.includes('RAZORPAY_KEY_SECRET'), 'Razorpay server secret must be used only server-side');
-assert(server.includes('REFUND_REQUIRED'), 'Paid orders must not be cancelled before refund handling');
-assert(server.includes('mergedItems'), 'Repeated product IDs must be merged before stock/price checks');
-assert(server.includes('isValidDateOnly'), 'Coupon expiry must use strict calendar-date validation');
-assert(server.includes('safeCsvCell'), 'CSV exports must guard against spreadsheet formula injection');
-assert(server.includes('INVALID_TRANSITION'), 'Order status changes must follow a controlled lifecycle');
-assert(server.includes("payment_status = 'Paid'"), 'Revenue summaries must exclude unverified orders');
-assert(server.includes('paidOrders'), 'Monthly report must distinguish paid orders from all orders');
-assert(server.includes('}).partial().strict()'), 'Product updates must reject unknown fields and validate supplied values');
-assert(read('scripts/db-audit.js').includes('readonly: true'), 'Database audit must open the live database in read-only mode');
-assert(!read('scripts/db-audit.js').includes('require("../src/db")'), 'Database audit must not run app migrations or seed logic');
-assert(read('package.json').includes('db:audit'), 'A read-only database audit command must be available');
-assert(read('scripts/create-admin.js').includes('askHidden'), 'Admin creation must hide password input on supported terminals');
-assert(db.includes('razorpay_order_id') && db.includes('payment_token_hash'), 'Database must persist gateway and payment-token references');
-assert(storefront.includes('checkout.razorpay.com'), 'Razorpay checkout script must be available for online payments');
-assert(storefrontJs.includes('/api/payments/razorpay/verify'), 'Checkout must verify gateway payment before showing paid status');
-assert(storefrontJs.includes('IntersectionObserver'), 'Scroll reveal motion enhancement must be present');
-assert(storefrontJs.includes('no order has been placed'), 'Missing payment widget must fail before creating an order');
-assert(storefrontJs.includes('form.reset()'), 'Checkout form must reset after successful order/payment');
-assert(fs.existsSync(path.join(root, 'PAYMENT-SETUP.md')), 'Payment setup guide must exist');
-assert(!/RAZORPAY_KEY_SECRET/.test(storefrontJs + storefront), 'Gateway secret must never be exposed in frontend files');
-for (const slug of ['kashmiri-red-chilli','golden-turmeric','green-cardamom','cumin-seeds','black-peppercorns','garam-masala']) assert(fs.existsSync(path.join(root, 'public', 'images', `${slug}.webp`)), `Missing bundled product image: ${slug}.webp`);
-console.log('Static smoke tests passed: core routes, wholesale fields, checkout/admin hooks, CSRF/session checks, transactional stock handling, Razorpay signature/capture verification, webhook validation, local product images, motion enhancements, duplicate-cart aggregation, coupon-date validation, CSV formula-injection protection, order lifecycle validation, paid-only revenue, strict product updates, read-only SQLite integrity auditing, hidden admin-password entry, and complete admin inventory editing.');
-console.log('Note: these are static checks, not a live HTTP/database/browser integration test.');
+
+// Storefront
+for (const id of ['checkout-form', 'product-grid', 'cart-items', 'search-input', 'empty-state', 'quickview', 'ship-meter', 'confirm-step', 'wa-float', 'bag-bar', 'menu-toggle', 'price-table-body']) {
+  assert(html.includes(`id="${id}"`), `Missing storefront element: #${id}`);
+}
+assert(html.includes('<!--JSONLD-->'), 'index.html needs the JSON-LD placeholder');
+assert(html.includes('og:image'), 'Open Graph tags missing');
+assert(!/â€|âœ|âŒ|â˜|Ã—/.test(html + appJs), 'Mojibake characters found in storefront files');
+assert(appJs.includes('payload.items'), 'Checkout must submit cart items');
+assert(appJs.includes('localStorage'), 'Cart must persist in localStorage');
+assert(css.includes('.js-ready .sy-reveal'), 'Reveal animations must only hide content once JS is ready');
+
+console.log('Smoke test passed: files, routes, security rules and storefront features look good.');

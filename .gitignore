@@ -30,3 +30,14 @@ npm-debug.log*
 
 # Local security reports and backups
 security-report*/
+# Archived old UI versions, PowerShell patch scripts and reports (kept locally only)
+_archive/
+cookies.txt
+*.zip
+health-report-*.txt
+npm-audit-report.txt
+data/*backup*
+
+# Test output
+test-results/
+playwright-report/

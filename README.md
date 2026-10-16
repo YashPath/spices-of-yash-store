@@ -4,6 +4,56 @@ Spices of Yash is a local-first retail and wholesale storefront starter with pro
 
 > **Before selling:** This is a starter, not a security-audited production deployment. Replace demo branding, imagery, contact details, product copy and prices. Test the order flow. Configure HTTPS, backups, privacy/terms/returns policies, delivery rules and applicable Indian food-business compliance (including FSSAI where applicable). UPI order selection and merchant UPI ID instructions are supported, but payment is not automatically verified and no payment gateway is integrated.
 
+## What's new in v3.1
+- **Postgres support:** set `DATABASE_URL` and the store uses Postgres (orders, sessions, uploaded photos). Without it, it uses the local SQLite file as before. `npm run db:copy-to-postgres` copies your existing SQLite data across.
+- **Order alerts:** every new order is sent to your Telegram (free). Admin → Overview → "Send test alert" checks the setup.
+- **Delivery fee:** flat `DELIVERY_FEE` (default ₹49) below `FREE_DELIVERY_MIN` (₹799), calculated on the server and shown in the bag, checkout, confirmation, admin and CSV.
+- **Policy pages:** `/privacy`, `/terms`, `/shipping-policy`, `/refund-policy` (linked in the footer, included in the sitemap). They are sensible templates — read them and adjust to how you actually run the business.
+- **New admin dashboard:** overview with store-health checks, order search + status/payment filters, WhatsApp-the-customer link, product photo upload (resized to WebP and saved in the database), low-stock highlighting, coupon on/off, reports.
+- **Faster images:** 600px copies of product photos for cards (`srcset`).
+- **Tests + CI:** `npm test` (static checks + 18 API tests), `npm run test:e2e` (Playwright, desktop + mobile), GitHub Actions runs everything on SQLite and Postgres for every push.
+
+### Order alerts (Telegram)
+1. In Telegram, open **@BotFather** → `/newbot` → copy the token into `TELEGRAM_BOT_TOKEN`.
+2. Send any message to your new bot, then open `https://api.telegram.org/bot<TOKEN>/getUpdates` and copy the number after `"chat":{"id":` into `TELEGRAM_CHAT_ID`.
+3. Restart the store, open Admin → Overview → **Send test alert**.
+
+### Deploy on Render with a free Postgres (Neon)
+1. Create a free database at neon.tech → copy the connection string (`postgresql://...sslmode=require`).
+2. Render → your web service → **Environment**: add `DATABASE_URL`, `NODE_ENV=production`, `SESSION_SECRET` (48+ random characters), `SITE_URL`, `UPI_ID`, and for the first deploy `ADMIN_BOOTSTRAP_USERNAME` / `ADMIN_BOOTSTRAP_PASSWORD`.
+3. Build command `npm install`, start command `npm start`. Deploy. `/api/health` should show `"database":"postgres"`.
+4. Optional: copy your local orders/products with `DATABASE_URL=... npm run db:copy-to-postgres` (refuses if Postgres already has orders).
+5. Log in at `/admin`, then remove the two `ADMIN_BOOTSTRAP_*` variables.
+
+### Tests
+```bash
+npm test                 # static checks + API tests on a throwaway SQLite database
+TEST_DATABASE_URL=postgres://... npm run test:api   # same API tests on Postgres (wipes that database!)
+npx playwright install chromium && npm run test:e2e  # browser tests, desktop + mobile
+```
+
+## What's new in v3 (storefront redesign)
+- **Fixed:** animations and hidden sections (old inline scripts were blocked by the security policy — now in `public/animations.js`), broken characters (`â€™` etc.), hardcoded hero price, external hero video, Unsplash hotlinked images (now local `/images/*.webp`), and a rate-limit bug that blocked customers after ~10 page loads.
+- **Shopping:** product quick view with quantity, working search + category filters with empty state, cart saved in the browser, free-delivery progress bar, recipe "add these spices" buttons, order confirmation screen with UPI QR + UPI app link, WhatsApp button and "send order on WhatsApp".
+- **Design:** one token-based stylesheet, self-hosted fonts (Fraunces + Manrope), new Story, Recipes, Promise, Wholesale price list, FAQ and footer sections, mobile menu and sticky "View bag" bar.
+- **SEO:** meta + Open Graph tags, Product/Organization JSON-LD (rendered from the database), `/sitemap.xml`, `/robots.txt`.
+- **Cleanup:** old backups, PowerShell patch scripts and reports moved to `_archive/` (git-ignored).
+
+### Storefront settings (`.env`)
+| Key | What it does |
+| --- | --- |
+| `UPI_ID` | Your UPI ID (e.g. `name@okaxis`). Shows UPI ID + QR after checkout. |
+| `WHATSAPP_NUMBER` | Country code + number, digits only (e.g. `919876543210`). Shows the floating chat button and WhatsApp links. |
+| `CONTACT_EMAIL`, `CONTACT_PHONE`, `STORE_ADDRESS` | Footer contact details (hidden when blank). |
+| `FSSAI_NUMBER` | Licence number shown in the footer. |
+| `INSTAGRAM_URL`, `FACEBOOK_URL`, `YOUTUBE_URL` | Footer social icons (hidden when blank). |
+| `SITE_URL` | Your live URL — used for canonical/OG tags and the sitemap. |
+| `FREE_DELIVERY_MIN` | Free-delivery threshold in ₹ (default 799). |
+| `DELIVERY_FEE` | Flat delivery charge below the threshold (default 49). |
+| `DATABASE_URL` | Postgres connection string. Blank = local SQLite file. |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | New-order alerts on Telegram. |
+| `DATA_DIR` | Folder for the SQLite files (default `data/`). Point it at a persistent disk if you stay on SQLite. |
+
 ## Requirements
 - Node.js 20 or newer
 - npm

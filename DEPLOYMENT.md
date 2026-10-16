@@ -1,31 +1,32 @@
 # Deployment notes — Spices of Yash
 
-This application is ready to be built for a Node.js host or Docker, but it has **not** been deployed to a public domain from this workspace.
+## Recommended: Render web service + Neon Postgres (both have free tiers)
 
-## Required environment variables
+Render's free web services have **temporary disks**: anything written to `data/` (the SQLite database and sessions) is lost on every redeploy or restart. Use Postgres for the live store.
 
-- `NODE_ENV=production`
-- `PORT` (provided by most hosts; otherwise `3000`)
-- `SESSION_SECRET` — unique random value, at least 32 characters; use a secret manager
-- `COOKIE_SECURE=true` — HTTPS is required
-- `STORE_NAME=Spices of Yash`
-- `CURRENCY=INR`
-- `UPI_ID` — optional merchant UPI ID; payments are not automatically verified
+1. **Database:** create a project at neon.tech and copy the connection string.
+2. **Render → New → Web Service** from the GitHub repo.
+   - Build command: `npm install`
+   - Start command: `npm start`
+3. **Environment variables**
+   - `NODE_ENV=production`
+   - `DATABASE_URL` — the Neon connection string
+   - `SESSION_SECRET` — at least 32 random characters (`node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`)
+   - `SITE_URL=https://<your-service>.onrender.com`
+   - `UPI_ID`, `WHATSAPP_NUMBER`, `CONTACT_EMAIL`, `CONTACT_PHONE`, `STORE_ADDRESS`, `FSSAI_NUMBER`
+   - `DELIVERY_FEE`, `FREE_DELIVERY_MIN` (optional)
+   - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (order alerts, optional)
+   - `ADMIN_BOOTSTRAP_USERNAME`, `ADMIN_BOOTSTRAP_PASSWORD` — first deploy only, creates the admin on the empty database; delete afterwards
+4. Deploy and open `/api/health` → `{"status":"ok","database":"postgres"}`.
+5. Log in at `/admin`. The Overview tab shows whether the database and alerts are set up.
 
-## Persistent storage
+Tables (products, orders, coupons, admins, images, sessions) are created automatically on first start.
 
-Mount a persistent writable volume at `/app/data` when using Docker. SQLite holds both store data and sessions. Back up the entire directory consistently and test restore procedures. Do not use ephemeral storage for a real store.
+## Staying on SQLite
+Only on a host with a persistent disk. Set `DATA_DIR` to the mounted folder (e.g. Render disk at `/var/data`) and back it up regularly.
 
-## Deploy checklist
-
-1. Configure HTTPS and all environment variables in the hosting dashboard.
-2. Create the first administrator in a private terminal using `npm run admin:create` (or run the command in a one-off deployment shell).
-3. Verify `/api/health` returns `{"status":"ok"}`.
-4. Place a test order with test product data, check stock/order persistence, test coupons and wholesale minimums, and verify admin order status/report/CSV flows.
-5. Configure real prices, product photos, contact details, shipping/returns/privacy policies, tax and applicable food-business compliance.
-6. Integrate a payment provider with signed server-side webhooks before representing online payments as automatic. UPI ID instructions alone do not process or verify payment.
-7. Run dependency vulnerability checks and an independent security review before public sales.
-
-## What this package cannot configure for you
-
-It does not provision a domain, hosting account, TLS certificate, production administrator credentials, merchant UPI account, payment gateway, courier integration, email/SMS service, legal policies, or business registrations.
+## Before taking real orders
+1. Place a test order, check the Telegram alert, mark it paid and shipped in the admin.
+2. Replace product photos and prices with your own, fill in contact details and FSSAI number.
+3. Read the policy pages (`/privacy`, `/terms`, `/shipping-policy`, `/refund-policy`) and change anything that doesn’t match how you work.
+4. UPI payments are verified by you manually. Integrate a payment gateway with signed webhooks before telling customers payment is confirmed automatically.
