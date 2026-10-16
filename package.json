@@ -15,7 +15,7 @@
     "db:copy-to-postgres": "node scripts/sqlite-to-postgres.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
